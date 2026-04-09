@@ -3,182 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>মাদ্রাসা বাজার - প্রফেশনাল ভার্সন</title>
+    <title>মাদ্রাসা বাজার - আল্টিমেট ভার্সন</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
         :root { --primary: #00695c; --secondary: #ffa000; }
-        body { font-family: 'Hind Siliguri', sans-serif; background-color: #f3f4f6; padding-bottom: 90px; overflow-x: hidden; }
+        body { font-family: 'Hind Siliguri', sans-serif; background-color: #f8fafc; padding-bottom: 90px; }
         
-        /* পেজ ওভারল্যাপ সমস্যার সমাধান */
-        .view { display: none !important; min-height: 100vh; background-color: #f3f4f6; }
-        .view.active { display: block !important; animation: fadeIn 0.3s ease; }
+        .view { display: none !important; min-height: 100vh; }
+        .view.active { display: block !important; animation: slideUp 0.3s ease; }
         
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .cat-card.active { background-color: var(--primary); color: white; border-color: var(--primary); }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .chat-bubble-me { background-color: var(--primary); color: white; border-radius: 18px 18px 2px 18px; }
-        .chat-bubble-other { background-color: white; color: #333; border-radius: 18px 18px 18px 2px; border: 1px solid #eee; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .cat-card.active { background: linear-gradient(135deg, #00695c, #00897b); color: white; transform: scale(1.05); }
+        .btn-primary { background: linear-gradient(135deg, #00695c, #004d40); color: white; }
+        .chat-bubble { max-width: 80%; padding: 12px 16px; border-radius: 20px; font-size: 14px; margin-bottom: 4px; }
+        .bubble-me { background: var(--primary); color: white; border-bottom-right-radius: 4px; align-self: flex-end; }
+        .bubble-other { background: #e2e8f0; color: #1e293b; border-bottom-left-radius: 4px; align-self: flex-start; }
     </style>
 </head>
 <body>
 
     <!-- ১. হোম ভিউ -->
     <div id="homeView" class="view active">
-        <header class="bg-[#00695c] p-4 text-white sticky top-0 z-50 rounded-b-[30px] shadow-lg">
-            <div class="flex justify-between items-center mb-4 px-1">
-                <h1 class="text-xl font-bold italic">মাদ্রাসা বাজার</h1>
-                <div class="flex gap-4 items-center">
-                    <div onclick="changeView('inboxView')" class="relative cursor-pointer">
-                        <i class="fa fa-bell text-xl opacity-80"></i>
-                        <!-- নোটিফিকেশন ব্যাজ (শুধু মেসেজ এলে জ্বলবে) -->
-                        <span id="notiBadge" class="hidden absolute -top-1 -right-1 bg-amber-400 w-3 h-3 rounded-full border-2 border-[#00695c] animate-bounce"></span>
-                    </div>
+        <header class="bg-[#00695c] p-5 text-white sticky top-0 z-50 rounded-b-[40px] shadow-xl">
+            <div class="flex justify-between items-center mb-5">
+                <h1 class="text-2xl font-black italic tracking-tighter">মাদ্রাসা বাজার</h1>
+                <div onclick="changeView('notificationView')" class="relative cursor-pointer p-2 bg-white/10 rounded-full">
+                    <i class="fa fa-bell text-xl"></i>
+                    <span id="adminNotiBadge" class="hidden absolute top-0 right-0 bg-red-500 w-3 h-3 rounded-full border-2 border-[#00695c] animate-ping"></span>
                 </div>
             </div>
             
-            <div onclick="openLocationModal()" class="flex items-center justify-between bg-white/10 p-3 rounded-2xl mb-4 border border-white/20 cursor-pointer">
-                <span class="text-sm"><i class="fa fa-map-marker-alt text-amber-400 mr-2"></i> <span id="displayLocation">সারা বাংলাদেশ</span></span>
-                <i class="fa fa-chevron-down text-[10px] opacity-70"></i>
+            <div onclick="openLocationModal()" class="bg-white/10 p-3 rounded-2xl mb-4 border border-white/20 flex justify-between items-center cursor-pointer">
+                <span class="text-sm font-medium"><i class="fa fa-map-marker-alt text-amber-400 mr-2"></i> <span id="displayLocation">সারা বাংলাদেশ</span></span>
+                <i class="fa fa-chevron-down text-[10px]"></i>
             </div>
 
-            <div class="bg-white flex items-center px-4 py-3 rounded-2xl text-gray-400">
+            <div class="bg-white flex items-center px-4 py-3 rounded-2xl text-gray-400 shadow-inner">
                 <i class="fa fa-search mr-3 text-emerald-600"></i>
-                <input type="text" id="searchInput" placeholder="মাদ্রাসা বা পণ্য খুঁজুন..." class="w-full outline-none text-sm text-gray-800 bg-transparent">
+                <input type="text" id="searchInput" onkeyup="renderAds()" placeholder="মাদ্রাসা বা পণ্য খুঁজুন..." class="w-full outline-none text-sm text-gray-800 bg-transparent">
             </div>
         </header>
 
-        <div class="p-4 flex gap-3 overflow-x-auto no-scrollbar py-5">
-            <button onclick="filterCategory('সব', this)" class="cat-card active shrink-0 px-6 py-2 rounded-full border bg-white text-sm font-bold shadow-sm">সব</button>
-            <button onclick="filterCategory('ভর্তি', this)" class="cat-card shrink-0 px-6 py-2 rounded-full border bg-white text-sm font-bold shadow-sm">ভর্তি বিজ্ঞপ্তি</button>
-            <button onclick="filterCategory('বই', this)" class="cat-card shrink-0 px-6 py-2 rounded-full border bg-white text-sm font-bold shadow-sm">বই-পুস্তক</button>
-            <button onclick="filterCategory('চাকরি', this)" class="cat-card shrink-0 px-6 py-2 rounded-full border bg-white text-sm font-bold shadow-sm">চাকরি</button>
+        <div class="p-4 flex gap-3 overflow-x-auto no-scrollbar py-6">
+            <button onclick="filterCategory('সব', this)" class="cat-card active shrink-0 px-6 py-2.5 rounded-full border bg-white text-sm font-bold shadow-sm transition-all">সব</button>
+            <button onclick="filterCategory('ভর্তি', this)" class="cat-card shrink-0 px-6 py-2.5 rounded-full border bg-white text-sm font-bold shadow-sm transition-all">ভর্তি</button>
+            <button onclick="filterCategory('বই', this)" class="cat-card shrink-0 px-6 py-2.5 rounded-full border bg-white text-sm font-bold shadow-sm transition-all">বই</button>
+            <button onclick="filterCategory('চাকরি', this)" class="cat-card shrink-0 px-6 py-2.5 rounded-full border bg-white text-sm font-bold shadow-sm transition-all">চাকরি</button>
         </div>
 
-        <div class="px-4 pb-10" id="adContainer">
-            <p class="text-center py-20 text-gray-400">লোড হচ্ছে...</p>
+        <div class="px-5 pb-10 space-y-4" id="adContainer"></div>
+    </div>
+
+    <!-- ২. নোটিফিকেশন ভিউ -->
+    <div id="notificationView" class="view bg-gray-50">
+        <div class="p-6 flex items-center gap-4 bg-white border-b sticky top-0 z-50">
+            <i onclick="changeView('homeView')" class="fa fa-arrow-left text-xl cursor-pointer"></i>
+            <h2 class="text-xl font-bold">অ্যাডমিন নোটিশ</h2>
+        </div>
+        <div id="adminNotiContainer" class="p-6 space-y-4"></div>
+    </div>
+
+    <!-- ৩. ইনবক্স ভিউ -->
+    <div id="inboxView" class="view bg-white">
+        <div class="p-6 bg-emerald-800 text-white rounded-b-[40px] shadow-lg mb-4">
+            <h2 class="text-2xl font-black">মেসেজ বক্স</h2>
+        </div>
+        <div id="chatListContainer" class="px-5 space-y-3"></div>
+    </div>
+
+    <!-- ৪. চ্যাট বক্স -->
+    <div id="chatBoxView" class="view fixed inset-0 bg-[#f0f2f5] z-[200] hidden flex flex-col">
+        <div class="bg-white p-4 border-b flex items-center gap-4 shadow-sm">
+            <i onclick="changeView('inboxView')" class="fa fa-arrow-left text-xl text-emerald-800 cursor-pointer"></i>
+            <div id="chatPartnerInitials" class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center font-bold text-emerald-700 uppercase"></div>
+            <span id="chatPartnerName" class="font-bold text-gray-800">চ্যাট</span>
+        </div>
+        <div id="messageDisplay" class="flex-grow p-5 overflow-y-auto flex flex-col gap-2"></div>
+        <div class="p-4 bg-white border-t flex gap-3 items-center">
+            <input type="text" id="chatInput" placeholder="মেসেজ লিখুন..." class="flex-grow bg-gray-100 p-4 rounded-3xl outline-none text-sm">
+            <button onclick="sendChatMessage()" class="bg-emerald-700 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg"><i class="fa fa-paper-plane"></i></button>
         </div>
     </div>
 
-    <!-- ২. বিস্তারিত ভিউ (Details Page) -->
-    <div id="detailsView" class="view fixed inset-0 bg-white z-[100] hidden overflow-y-auto">
-        <div class="sticky top-0 bg-white/90 backdrop-blur-md p-4 flex items-center gap-4 border-b z-50">
-            <i onclick="changeView('homeView')" class="fa fa-arrow-left text-xl cursor-pointer p-2"></i>
-            <span class="font-bold">বিজ্ঞাপনের বিস্তারিত</span>
-        </div>
-        <div class="pb-32">
-            <img id="detImg" class="w-full h-80 object-cover bg-gray-100">
-            <div class="p-6">
-                <div class="flex gap-2 mb-4">
-                    <span id="detCat" class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase"></span>
-                    <span id="detLocTag" class="bg-amber-100 text-amber-700 text-[10px] font-bold px-3 py-1 rounded-full"></span>
-                </div>
-                <h2 id="detTitle" class="text-2xl font-black text-gray-800 leading-tight"></h2>
-                <p id="detDesc" class="mt-6 text-gray-600 text-sm leading-relaxed whitespace-pre-line"></p>
+    <!-- ৫. প্রোফাইল ভিউ -->
+    <div id="profileView" class="view bg-gray-50">
+        <div class="bg-emerald-800 h-48 rounded-b-[50px] relative">
+            <div class="absolute -bottom-12 left-1/2 -translate-x-1/2">
+                <img id="userImg" class="w-28 h-28 rounded-full border-4 border-white shadow-2xl object-cover bg-gray-200">
             </div>
         </div>
-        <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t flex gap-3 z-50">
-            <a id="detCall" class="flex-grow bg-emerald-700 text-white text-center py-4 rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2 active:scale-95 transition">
-                <i class="fa fa-phone-alt"></i> কল করুন
-            </a>
-            <button id="detChatBtn" class="flex-grow bg-amber-500 text-white py-4 rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2 active:scale-95 transition">
-                <i class="fa fa-comment-dots"></i> মেসেজ
-            </button>
+        <div class="mt-16 text-center px-6">
+            <h3 id="userName" class="text-2xl font-black text-gray-800 uppercase">ইউজার</h3>
+            <p id="userEmail" class="text-sm text-gray-400 mt-1"></p>
+            <div class="flex justify-center gap-4 mt-6">
+                <div class="bg-white p-4 rounded-3xl shadow-sm border w-24">
+                    <p id="myAdCount" class="text-xl font-black text-emerald-700">০</p>
+                    <p class="text-[10px] uppercase font-bold text-gray-400">পোস্ট</p>
+                </div>
+                <div onclick="handleLogout()" class="bg-white p-4 rounded-3xl shadow-sm border w-24 cursor-pointer text-red-500">
+                    <i class="fa fa-sign-out-alt text-xl"></i>
+                    <p class="text-[10px] uppercase font-bold">লগআউট</p>
+                </div>
+            </div>
         </div>
-    </div>
-
-    <!-- ৩. ইনবক্স ভিউ (Message List) -->
-    <div id="inboxView" class="view p-6">
-        <h2 class="text-2xl font-black mb-6">আমার মেসেজসমূহ</h2>
-        <div id="chatListContainer" class="space-y-4">
-            <p class="text-center text-gray-400 py-10">কোনো মেসেজ নেই</p>
-        </div>
-    </div>
-
-    <!-- ৪. চ্যাট বক্স (Chat Window) -->
-    <div id="chatBoxView" class="view fixed inset-0 bg-gray-50 z-[200] hidden flex flex-col">
-        <div class="bg-white p-4 border-b flex items-center gap-4 shadow-sm">
-            <i onclick="changeView('inboxView')" class="fa fa-arrow-left text-xl cursor-pointer"></i>
-            <span id="chatPartnerName" class="font-bold text-emerald-800">চ্যাট</span>
-        </div>
-        <div id="messageDisplay" class="flex-grow p-4 overflow-y-auto flex flex-col gap-3"></div>
-        <div class="p-4 bg-white border-t flex gap-2">
-            <input type="text" id="chatInput" placeholder="কিছু লিখুন..." class="flex-grow bg-gray-100 p-4 rounded-2xl outline-none">
-            <button onclick="sendChatMessage()" class="bg-emerald-700 text-white w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg active:scale-90 transition">
-                <i class="fa fa-paper-plane"></i>
-            </button>
-        </div>
-    </div>
-
-    <!-- ৫. পোস্ট ভিউ -->
-    <div id="postView" class="view p-6 max-w-md mx-auto">
-        <div class="bg-white p-6 rounded-[35px] shadow-xl border">
-            <h2 class="text-2xl font-black mb-6 text-emerald-800">নতুন বিজ্ঞাপন দিন</h2>
-            <form id="adForm" class="space-y-4">
-                <select id="mCat" class="w-full bg-gray-50 p-4 rounded-2xl border outline-none" required>
-                    <option value="">ক্যাটাগরি</option>
-                    <option value="ভর্তি">ভর্তি বিজ্ঞপ্তি</option>
-                    <option value="বই">বই-পুস্তক</option>
-                    <option value="চাকরি">চাকরি</option>
-                    <option value="পোশাক">পোশাক</option>
-                </select>
-                <input type="text" id="mName" placeholder="বিজ্ঞাপনের টাইটেল" class="w-full bg-gray-50 p-4 rounded-2xl border outline-none" required>
-                <select id="mLoc" class="w-full bg-gray-50 p-4 rounded-2xl border outline-none" required><option value="">জেলা নির্বাচন করুন</option></select>
-                <input type="tel" id="mPhone" placeholder="মোবাইল নম্বর" class="w-full bg-gray-50 p-4 rounded-2xl border outline-none" required>
-                <textarea id="mDetails" placeholder="বিস্তারিত বিবরণ..." class="w-full bg-gray-50 p-4 rounded-2xl border h-32 outline-none resize-none" required></textarea>
-                <input type="file" id="mImage" accept="image/*" class="text-xs" required>
-                <button type="submit" id="submitBtn" class="w-full bg-emerald-700 text-white py-5 rounded-2xl font-bold shadow-lg">পাবলিশ করুন</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- ৬. প্রোফাইল ভিউ -->
-    <div id="profileView" class="view p-6">
-        <div class="bg-white p-8 rounded-[40px] shadow-lg text-center relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-20 bg-emerald-700"></div>
-            <img id="userImg" src="" class="w-24 h-24 rounded-full mx-auto border-4 border-white relative z-10 shadow-lg object-cover bg-gray-100">
-            <h3 id="userName" class="text-xl font-black mt-4 text-gray-800"></h3>
-            <button onclick="handleLogout()" class="mt-4 text-red-500 font-bold border bg-red-50 px-8 py-2 rounded-2xl">লগআউট</button>
-        </div>
-        <div class="mt-8">
-            <h4 class="font-bold text-gray-700 mb-4 px-2">আমার বিজ্ঞাপনসমূহ</h4>
+        <div class="mt-10 px-6 pb-20">
+            <h4 class="font-black text-gray-700 mb-4">আমার বিজ্ঞাপনসমূহ</h4>
             <div id="myAdList" class="space-y-3"></div>
         </div>
     </div>
 
-    <!-- ৭. লগইন ভিউ -->
-    <div id="loginView" class="view p-10 flex flex-col items-center justify-center min-h-screen text-center">
-        <div class="bg-white p-10 rounded-[45px] shadow-2xl border w-full max-w-sm">
-            <h2 class="text-2xl font-black mb-6">লগইন প্রয়োজন</h2>
-            <button id="googleLogin" class="w-full flex items-center justify-center gap-4 bg-white border p-4 rounded-2xl font-bold shadow-sm">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" class="w-6"> গুগল দিয়ে লগইন
+    <!-- ৬. লগইন ও সাইনআপ -->
+    <div id="loginView" class="view flex flex-col items-center justify-center p-8 bg-gray-50">
+        <div class="w-full max-w-sm bg-white p-10 rounded-[40px] shadow-2xl border">
+            <h2 id="authTitle" class="text-2xl font-black text-center mb-6">স্বাগতম!</h2>
+            <div class="space-y-4">
+                <input type="email" id="emailInput" placeholder="ইমেইল" class="w-full bg-gray-50 border p-4 rounded-2xl outline-none">
+                <input type="password" id="passInput" placeholder="পাসওয়ার্ড" class="w-full bg-gray-50 border p-4 rounded-2xl outline-none">
+                <button id="emailAuthBtn" onclick="handleEmailAuth()" class="w-full btn-primary py-4 rounded-2xl font-black">লগইন করুন</button>
+            </div>
+            <div class="flex items-center my-6 gap-2"><hr class="flex-grow"><span class="text-xs text-gray-300">অথবা</span><hr class="flex-grow"></div>
+            <button onclick="handleGoogleLogin()" class="w-full flex items-center justify-center gap-4 bg-white border p-4 rounded-2xl font-bold shadow-sm">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" class="w-6"> গুগল
             </button>
+            <p class="text-center mt-6 text-sm">
+                <span id="authToggleText">অ্যাকাউন্ট নেই?</span> 
+                <button onclick="toggleAuth()" id="authToggleBtn" class="text-emerald-700 font-bold">সাইন আপ করুন</button>
+            </p>
+        </div>
+    </div>
+
+    <!-- ৭. পোস্ট ভিউ -->
+    <div id="postView" class="view p-6 bg-gray-50">
+        <div class="bg-white p-6 rounded-[35px] shadow-xl max-w-sm mx-auto">
+            <h2 class="text-2xl font-black mb-6 text-emerald-800">নতুন বিজ্ঞাপন</h2>
+            <form id="adForm" class="space-y-4">
+                <select id="mCat" class="w-full bg-gray-50 p-4 rounded-2xl border outline-none" required>
+                    <option value="">ক্যাটাগরি</option>
+                    <option value="ভর্তি">ভর্তি</option><option value="বই">বই</option><option value="চাকরি">চাকরি</option>
+                </select>
+                <input type="text" id="mName" placeholder="টাইটেল" class="w-full bg-gray-50 p-4 rounded-2xl border outline-none" required>
+                <select id="mLoc" class="w-full bg-gray-50 p-4 rounded-2xl border outline-none" required><option value="">জেলা</option></select>
+                <input type="tel" id="mPhone" placeholder="মোবাইল" class="w-full bg-gray-50 p-4 rounded-2xl border outline-none" required>
+                <textarea id="mDetails" placeholder="বিবরণ" class="w-full bg-gray-50 p-4 rounded-2xl border h-32 outline-none" required></textarea>
+                <input type="file" id="mImage" accept="image/*" class="text-xs" required>
+                <button type="submit" id="submitBtn" class="w-full btn-primary py-4 rounded-2xl font-black shadow-lg">পাবলিশ করুন</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ৮. বিস্তারিত ভিউ -->
+    <div id="detailsView" class="view fixed inset-0 bg-white z-[150] hidden overflow-y-auto">
+        <div class="sticky top-0 bg-white/90 p-4 border-b flex items-center gap-4 z-50">
+            <i onclick="changeView('homeView')" class="fa fa-arrow-left text-xl cursor-pointer"></i>
+            <span class="font-bold">বিস্তারিত</span>
+        </div>
+        <img id="detImg" class="w-full h-80 object-cover bg-gray-100">
+        <div class="p-6 pb-24">
+            <h2 id="detTitle" class="text-2xl font-black text-gray-800"></h2>
+            <p id="detLocTag" class="text-sm text-gray-400 mt-1"></p>
+            <p id="detDesc" class="mt-6 text-gray-600 leading-relaxed"></p>
+        </div>
+        <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t flex gap-3 z-50 shadow-xl">
+            <a id="detCall" class="flex-grow btn-primary py-4 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg"><i class="fa fa-phone-alt"></i> কল করুন</a>
+            <button id="detChatBtn" class="flex-grow bg-amber-500 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg"><i class="fa fa-comment-dots"></i> মেসেজ</button>
         </div>
     </div>
 
     <!-- লোকেশন মোডাল -->
     <div id="locationModal" class="fixed inset-0 bg-black/50 z-[200] hidden flex items-end">
-        <div class="bg-white w-full rounded-t-[40px] p-6 max-h-[85vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6 sticky top-0 bg-white py-2">
-                <h3 class="text-xl font-bold">স্থান নির্বাচন করুন</h3>
+        <div class="bg-white w-full rounded-t-[40px] p-6 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">স্থান পরিবর্তন</h3>
                 <i onclick="closeLocationModal()" class="fa fa-times text-gray-400 text-xl cursor-pointer"></i>
             </div>
-            <div id="locationList" class="grid grid-cols-1 gap-2"></div>
+            <div id="locationList" class="space-y-2"></div>
         </div>
     </div>
 
     <!-- বটম নেভিগেশন -->
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center py-3 z-[90] shadow-2xl">
-        <button onclick="changeView('homeView')" class="nav-item text-emerald-800 text-center w-1/4"><i class="fa fa-home text-xl"></i><p class="text-[10px] font-bold">হোম</p></button>
-        <button onclick="checkAuthAndPost()" class="w-1/4 -mt-10"><div class="bg-amber-500 w-14 h-14 rounded-2xl rotate-45 flex items-center justify-center border-4 border-white shadow-lg"><i class="fa fa-plus text-white text-2xl -rotate-45"></i></div></button>
-        <button onclick="checkAuthAndInbox()" class="nav-item text-gray-400 text-center w-1/4"><i class="fa fa-comment-dots text-xl"></i><p class="text-[10px] font-bold">মেসেজ</p></button>
-        <button onclick="checkAuthAndProfile()" class="nav-item text-gray-400 text-center w-1/4"><i class="fa fa-user-circle text-xl"></i><p class="text-[10px] font-bold">প্রোফাইল</p></button>
+        <button onclick="changeView('homeView')" class="nav-item text-center w-1/4"><i class="fa fa-home text-xl text-emerald-800"></i><p class="text-[10px] font-bold">হোম</p></button>
+        <button onclick="checkAuthAndPost()" class="w-1/4 -mt-10"><div class="bg-amber-500 w-14 h-14 rounded-2xl rotate-45 flex items-center justify-center border-4 border-white shadow-lg text-white"><i class="fa fa-plus text-2xl -rotate-45"></i></div></button>
+        <button onclick="checkAuthAndInbox()" class="nav-item text-center w-1/4 text-gray-400"><i class="fa fa-comment-dots text-xl"></i><p class="text-[10px] font-bold">মেসেজ</p></button>
+        <button onclick="checkAuthAndProfile()" class="nav-item text-center w-1/4 text-gray-400"><i class="fa fa-user-circle text-xl"></i><p class="text-[10px] font-bold">প্রোফাইল</p></button>
     </nav>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, where, deleteDoc, doc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -196,29 +211,44 @@
         const provider = new GoogleAuthProvider();
         const IMGBB_API = '7a5eacf017aadcfeb81ef6f990a570a6';
 
-        let currentUser = null, allAds = [], selectedCategory = 'সব', selectedLocation = 'সারা বাংলাদেশ', activeChatId = null;
+        let currentUser = null, isSignup = false, activeChatId = null, allAds = [], selectedCategory = 'সব', selectedLocation = 'সারা বাংলাদেশ';
+        const districts = ["ঢাকা", "চট্টগ্রাম", "রাজশাহী", "খুলনা", "বরিশাল", "সিলেট", "রংপুর", "ময়মনসিংহ", "কুমিল্লা", "বগুড়া", "নোয়াখালী", "চাঁদপুর"];
 
-        // ৬৪ জেলার তালিকা
-        const districts = ["ঢাকা", "চট্টগ্রাম", "রাজশাহী", "খুলনা", "বরিশাল", "সিলেট", "রংপুর", "ময়মনসিংহ", "কুমিল্লা", "ফেনী", "ব্রাহ্মণবাড়িয়া", "নোয়াখালী", "লক্ষ্মীপুর", "চাঁদপুর", "কক্সবাজার", "রাঙামাটি", "বান্দরবান", "খাগড়াছড়ি", "গাজীপুর", "মানিকগঞ্জ", "মুন্সীগঞ্জ", "নারায়ণগঞ্জ", "নরসিংদী", "ফরিদপুর", "রাজবাড়ী", "গোপালগঞ্জ", "মাদারীপুর", "শরীয়তপুর", "কিশোরগঞ্জ", "টাঙ্গাইল", "পাবনা", "সিরাজগঞ্জ", "বগুড়া", "জয়পুরহাট", "নওগাঁ", "নাটোর", "চাঁপাইনবাবগঞ্জ", "যশোর", "সাতক্ষীরা", "মেহেরপুর", "নড়াইল", "চুয়াডাঙ্গা", "কুষ্টিয়া", "মাগুরা", "বাগেরহাট", "ঝিনাইদহ", "ভোলা", "ঝালকাঠি", "পিরোজপুর", "বরগুনা", "পটুয়াখালী", "পঞ্চগড়", "দিনাজপুর", "লালমনিরহাট", "নীলফামারী", "কুড়িগ্রাম", "ঠাকুরগাঁও", "গাইবান্ধা", "শেরপুর", "জামালপুর", "নেত্রকোণা"];
-
-        // ১. সব বাটন ও পেজ কন্ট্রোল ফিক্সড
+        // ১. ভিউ ও নেভিগেশন কন্ট্রোল (সবার আগে এটি ফিক্স করা হয়েছে)
         window.changeView = (id) => {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             const target = document.getElementById(id);
             if(target) target.classList.add('active');
             
-            // নেভিগেশন আইকন কালার আপডেট
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.replace('text-emerald-800', 'text-gray-400'));
+            // নেভিগেশন আইকন আপডেট
+            document.querySelectorAll('.nav-item i').forEach(i => i.classList.replace('text-emerald-800', 'text-gray-400'));
             
             if(id === 'homeView') renderAds();
             if(id === 'inboxView') loadInbox();
             window.scrollTo(0,0);
         };
 
-        window.openLocationModal = () => document.getElementById('locationModal').classList.remove('hidden');
-        window.closeLocationModal = () => document.getElementById('locationModal').classList.add('hidden');
-        window.setLocation = (loc) => { selectedLocation = loc; document.getElementById('displayLocation').innerText = loc; closeLocationModal(); renderAds(); };
+        window.toggleAuth = () => {
+            isSignup = !isSignup;
+            document.getElementById('authTitle').innerText = isSignup ? "নতুন অ্যাকাউন্ট" : "স্বাগতম!";
+            document.getElementById('emailAuthBtn').innerText = isSignup ? "সাইন আপ" : "লগইন করুন";
+            document.getElementById('authToggleText').innerText = isSignup ? "অ্যাকাউন্ট আছে?" : "অ্যাকাউন্ট নেই?";
+        };
 
+        window.handleEmailAuth = async () => {
+            const e = document.getElementById('emailInput').value, p = document.getElementById('passInput').value;
+            if(!e || !p) return alert("পূরণ করুন");
+            try {
+                if(isSignup) { const r = await createUserWithEmailAndPassword(auth, e, p); await updateProfile(r.user, { displayName: e.split('@')[0] }); }
+                else { await signInWithEmailAndPassword(auth, e, p); }
+                changeView('homeView');
+            } catch(err) { alert(err.message); }
+        };
+
+        window.handleGoogleLogin = () => signInWithPopup(auth, provider).then(() => changeView('homeView'));
+        window.handleLogout = () => signOut(auth).then(() => changeView('homeView'));
+
+        // ২. ডাটা রেন্ডারিং ও ফিল্টার
         window.filterCategory = (cat, btn) => {
             selectedCategory = cat;
             document.querySelectorAll('.cat-card').forEach(b => b.classList.remove('active'));
@@ -226,23 +256,57 @@
             renderAds();
         };
 
-        // ২. নোটিফিকেশন সিস্টেম
-        function listenNotifications() {
-            if(!currentUser) return;
-            onSnapshot(query(collection(db, "chats"), where("users", "array-contains", currentUser.uid)), (snap) => {
-                const badge = document.getElementById('notiBadge');
-                if(!snap.empty) badge.classList.remove('hidden');
-                else badge.classList.add('hidden');
+        window.openLocationModal = () => document.getElementById('locationModal').classList.remove('hidden');
+        window.closeLocationModal = () => document.getElementById('locationModal').classList.add('hidden');
+        window.setLocation = (l) => { selectedLocation = l; document.getElementById('displayLocation').innerText = l; closeLocationModal(); renderAds(); };
+
+        function renderAds() {
+            const container = document.getElementById('adContainer');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            container.innerHTML = '';
+            
+            let filtered = allAds.filter(ad => {
+                const matchCat = (selectedCategory === 'সব' || ad.category === selectedCategory);
+                const matchLoc = (selectedLocation === 'সারা বাংলাদেশ' || ad.location === selectedLocation);
+                const matchSearch = ad.name.toLowerCase().includes(search);
+                return matchCat && matchLoc && matchSearch;
+            });
+
+            if(filtered.length === 0) { container.innerHTML = '<p class="text-center py-20 text-gray-400">বিজ্ঞাপন পাওয়া যায়নি</p>'; return; }
+
+            filtered.forEach(ad => {
+                container.innerHTML += `
+                    <div onclick="openDetails('${ad.id}')" class="bg-white p-3 rounded-[30px] shadow-sm flex gap-4 border border-gray-100">
+                        <img src="${ad.imageUrl}" class="w-24 h-24 rounded-2xl object-cover">
+                        <div class="flex-grow flex flex-col justify-between py-1">
+                            <div><span class="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase">${ad.category || 'সাধারণ'}</span>
+                            <h3 class="font-bold text-gray-800 line-clamp-1 mt-1">${ad.name}</h3>
+                            <p class="text-[10px] text-gray-400 mt-1"><i class="fa fa-map-marker-alt"></i> ${ad.location}</p></div>
+                            <span class="text-xs font-bold text-emerald-600">বিস্তারিত...</span>
+                        </div>
+                    </div>`;
             });
         }
 
-        // ৩. চ্যাট সিস্টেম (মেসেজ)
-        window.startChat = (ownerId, ownerName) => {
-            if(!currentUser) { changeView('loginView'); return; }
-            if(currentUser.uid === ownerId) { alert("নিজের সাথে চ্যাট সম্ভব নয়!"); return; }
-            activeChatId = currentUser.uid < ownerId ? `${currentUser.uid}_${ownerId}` : `${ownerId}_${currentUser.uid}`;
-            setDoc(doc(db, "chats", activeChatId), { users: [currentUser.uid, ownerId], names: [currentUser.displayName, ownerName], lastUpdate: serverTimestamp() }, { merge: true });
-            document.getElementById('chatPartnerName').innerText = ownerName;
+        window.openDetails = (id) => {
+            const ad = allAds.find(a => a.id === id);
+            document.getElementById('detImg').src = ad.imageUrl;
+            document.getElementById('detTitle').innerText = ad.name;
+            document.getElementById('detLocTag').innerText = ad.location;
+            document.getElementById('detDesc').innerText = ad.details;
+            document.getElementById('detCall').href = `tel:${ad.phone}`;
+            document.getElementById('detChatBtn').onclick = () => startChat(ad.uid, ad.name);
+            changeView('detailsView');
+        };
+
+        // ৩. মেসেজিং লজিক
+        window.startChat = (oId, oName) => {
+            if(!currentUser) return changeView('loginView');
+            if(currentUser.uid === oId) return alert("নিজের সাথে চ্যাট হবে না");
+            activeChatId = currentUser.uid < oId ? `${currentUser.uid}_${oId}` : `${oId}_${currentUser.uid}`;
+            setDoc(doc(db, "chats", activeChatId), { users: [currentUser.uid, oId], names: [currentUser.displayName || "ইউজার", oName], lastUpdate: serverTimestamp() }, { merge: true });
+            document.getElementById('chatPartnerName').innerText = oName;
+            document.getElementById('chatPartnerInitials').innerText = oName[0];
             changeView('chatBoxView');
             loadMessages();
         };
@@ -261,7 +325,7 @@
                 snap.forEach(d => {
                     const m = d.data();
                     const isMe = m.senderId === currentUser.uid;
-                    div.innerHTML += `<div class="${isMe ? 'self-end chat-bubble-me' : 'self-start chat-bubble-other'} p-3 max-w-[80%] shadow-sm text-sm">${m.text}</div>`;
+                    div.innerHTML += `<div class="chat-bubble ${isMe ? 'bubble-me' : 'bubble-other'} shadow-sm">${m.text}</div>`;
                 });
                 div.scrollTop = div.scrollHeight;
             });
@@ -271,99 +335,62 @@
             if(!currentUser) return;
             onSnapshot(query(collection(db, "chats"), where("users", "array-contains", currentUser.uid)), (snap) => {
                 const container = document.getElementById('chatListContainer');
-                container.innerHTML = snap.empty ? '<p class="text-center py-10">কোনো চ্যাট নেই</p>' : '';
+                container.innerHTML = snap.empty ? '<p class="text-center py-20 text-gray-400">কোনো চ্যাট নেই</p>' : '';
                 snap.forEach(d => {
                     const c = d.data();
                     const partner = c.users[0] === currentUser.uid ? c.names[1] : c.names[0];
                     const partnerId = c.users[0] === currentUser.uid ? c.users[1] : c.users[0];
-                    container.innerHTML += `<div onclick="startChat('${partnerId}', '${partner}')" class="bg-white p-4 rounded-2xl flex items-center gap-4 shadow-sm border">
-                        <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center font-bold text-emerald-700">${partner ? partner[0] : 'U'}</div>
-                        <div><h4 class="font-bold text-sm">${partner || 'ইউজার'}</h4><p class="text-[10px] text-gray-400">মেসেজ দেখতে ক্লিক করুন</p></div>
-                    </div>`;
+                    container.innerHTML += `
+                        <div onclick="startChat('${partnerId}', '${partner}')" class="bg-white p-4 rounded-3xl flex items-center gap-4 shadow-sm border border-gray-50 active:scale-95 transition">
+                            <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center font-black text-emerald-800 uppercase">${partner[0]}</div>
+                            <div class="flex-grow"><h4 class="font-black text-gray-800">${partner}</h4><p class="text-[10px] text-gray-400">কথোপকথন দেখতে ট্যাপ করুন</p></div>
+                        </div>`;
                 });
             });
         }
 
-        // ৪. বিজ্ঞাপন রেন্ডার ও ডিটেইলস (Undefined ফিক্সড)
-        window.openDetails = (id) => {
-            const ad = allAds.find(a => a.id === id);
-            if(!ad) return;
-            document.getElementById('detImg').src = ad.imageUrl || '';
-            document.getElementById('detTitle').innerText = ad.name || 'টাইটেল নেই';
-            document.getElementById('detCat').innerText = ad.category || 'সাধারণ';
-            document.getElementById('detLocTag').innerText = ad.location || 'সারা বাংলাদেশ';
-            document.getElementById('detDesc').innerText = ad.details || 'কোনো বিবরণ নেই';
-            document.getElementById('detCall').href = `tel:${ad.phone}`;
-            document.getElementById('detChatBtn').onclick = () => startChat(ad.uid, ad.name || "কর্তৃপক্ষ");
-            changeView('detailsView');
-        };
-
-        function renderAds() {
-            const container = document.getElementById('adContainer');
-            container.innerHTML = '';
-            let filtered = allAds.filter(ad => (selectedCategory === 'সব' || ad.category === selectedCategory) && (selectedLocation === 'সারা বাংলাদেশ' || ad.location === selectedLocation));
-            
-            if(filtered.length === 0) { container.innerHTML = '<p class="text-center py-20 text-gray-400">কোনো বিজ্ঞাপন নেই</p>'; return; }
-            
-            filtered.forEach(ad => {
-                container.innerHTML += `<div onclick="openDetails('${ad.id}')" class="bg-white p-3 rounded-[28px] shadow-sm flex gap-4 border border-gray-100 mb-4 active:scale-95 transition">
-                    <img src="${ad.imageUrl}" class="w-24 h-24 rounded-2xl object-cover bg-gray-50">
-                    <div class="flex-grow flex flex-col justify-between py-1">
-                        <div><span class="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase">${ad.category || 'সাধারণ'}</span>
-                        <h3 class="font-bold text-gray-800 line-clamp-1 mt-1">${ad.name || 'টাইটেল নেই'}</h3>
-                        <p class="text-[10px] text-gray-400 mt-1"><i class="fa fa-map-marker-alt"></i> ${ad.location || 'সারা বাংলাদেশ'}</p></div>
-                        <span class="text-xs font-bold text-emerald-600">বিস্তারিত...</span>
-                    </div></div>`;
-            });
-        }
-
-        // ৫. ইনিশিয়াল সেটিংস ও অথ লজিক
+        // ৪. ইনিশিয়াল সেটিংস
         onSnapshot(query(collection(db, "ads"), orderBy("createdAt", "desc")), (snap) => { allAds = snap.docs.map(d => ({id: d.id, ...d.data()})); renderAds(); });
+        onSnapshot(query(collection(db, "admin_notices"), orderBy("time", "desc")), (snap) => {
+            const b = document.getElementById('adminNotiBadge'), c = document.getElementById('adminNotiContainer');
+            if(!snap.empty) { b.classList.remove('hidden'); c.innerHTML = ''; snap.forEach(d => {
+                const n = d.data(); c.innerHTML += `<div class="bg-white p-5 rounded-[25px] border-l-8 border-emerald-600 shadow-sm"><h4 class="font-black text-emerald-800">${n.title}</h4><p class="text-sm text-gray-600 mt-2">${n.body}</p></div>`;
+            }); }
+        });
 
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
             if(user) {
                 document.getElementById('userName').innerText = user.displayName;
-                document.getElementById('userImg').src = user.photoURL;
-                listenNotifications();
+                document.getElementById('userEmail').innerText = user.email;
+                document.getElementById('userImg').src = user.photoURL || `https://ui-avatars.com/api/?name=${user.email}&background=00695c&color=fff`;
                 loadMyAds(user.uid);
             }
         });
+
+        function loadMyAds(uid) {
+            onSnapshot(query(collection(db, "ads"), where("uid", "==", uid)), (snap) => {
+                const list = document.getElementById('myAdList');
+                document.getElementById('myAdCount').innerText = snap.size;
+                list.innerHTML = '';
+                snap.forEach(d => {
+                    const ad = d.data();
+                    list.innerHTML += `<div class="bg-white p-3 rounded-2xl border flex justify-between items-center"><div class="flex items-center gap-3"><img src="${ad.imageUrl}" class="w-10 h-10 rounded-xl object-cover"><span class="text-sm font-bold">${ad.name}</span></div><button onclick="deleteAd('${d.id}')" class="text-red-500 p-2"><i class="fa fa-trash"></i></button></div>`;
+                });
+            });
+        }
+
+        window.deleteAd = async (id) => { if(confirm("ডিলিট করবেন?")) await deleteDoc(doc(db, "ads", id)); };
 
         const init = () => {
             const list = document.getElementById('locationList'), select = document.getElementById('mLoc');
             list.innerHTML = `<button onclick="setLocation('সারা বাংলাদেশ')" class="w-full text-left p-4 rounded-2xl border font-bold text-emerald-700 bg-emerald-50">সারা বাংলাদেশ</button>`;
             districts.forEach(d => {
-                list.innerHTML += `<button onclick="setLocation('${d}')" class="w-full text-left p-4 rounded-2xl border hover:bg-gray-50">${d}</button>`;
+                list.innerHTML += `<button onclick="setLocation('${d}')" class="w-full text-left p-4 rounded-2xl border">${d}</button>`;
                 select.innerHTML += `<option value="${d}">${d}</option>`;
             });
         };
         init();
-
-        window.checkAuthAndPost = () => currentUser ? changeView('postView') : changeView('loginView');
-        window.checkAuthAndProfile = () => currentUser ? changeView('profileView') : changeView('loginView');
-        window.checkAuthAndInbox = () => currentUser ? changeView('inboxView') : changeView('loginView');
-        document.getElementById('googleLogin').onclick = () => signInWithPopup(auth, provider).then(() => changeView('homeView'));
-        window.handleLogout = () => signOut(auth).then(() => changeView('homeView'));
-
-        function loadMyAds(uid) {
-            onSnapshot(query(collection(db, "ads"), where("uid", "==", uid)), (snap) => {
-                const list = document.getElementById('myAdList');
-                list.innerHTML = '';
-                snap.forEach(d => {
-                    const ad = d.data();
-                    list.innerHTML += `<div class="bg-white p-3 rounded-2xl border flex justify-between items-center shadow-sm">
-                        <div class="flex items-center gap-3">
-                            <img src="${ad.imageUrl}" class="w-10 h-10 rounded-xl object-cover">
-                            <span class="text-sm font-bold text-gray-700">${ad.name}</span>
-                        </div>
-                        <button onclick="deleteAd('${d.id}')" class="w-10 h-10 rounded-full bg-red-50 text-red-500"><i class="fa fa-trash"></i></button>
-                    </div>`;
-                });
-            });
-        }
-
-        window.deleteAd = async (id) => { if(confirm("মুছে ফেলতে চান?")) await deleteDoc(doc(db, "ads", id)); };
 
         document.getElementById('adForm').onsubmit = async (e) => {
             e.preventDefault();
@@ -374,9 +401,12 @@
                 const img = await res.json();
                 await addDoc(collection(db, "ads"), { name: document.getElementById('mName').value, category: document.getElementById('mCat').value, location: document.getElementById('mLoc').value, phone: document.getElementById('mPhone').value, details: document.getElementById('mDetails').value, imageUrl: img.data.url, uid: currentUser.uid, createdAt: serverTimestamp() });
                 changeView('homeView'); e.target.reset();
-            } catch(e) { alert("আপলোড ব্যর্থ হয়েছে!"); }
-            finally { btn.disabled = false; btn.innerText = "পাবলিশ করুন"; }
+            } catch(err) { alert("ব্যর্থ!"); } finally { btn.disabled = false; btn.innerText = "পাবলিশ"; }
         };
+
+        window.checkAuthAndPost = () => currentUser ? changeView('postView') : changeView('loginView');
+        window.checkAuthAndProfile = () => currentUser ? changeView('profileView') : changeView('loginView');
+        window.checkAuthAndInbox = () => currentUser ? changeView('inboxView') : changeView('loginView');
     </script>
 </body>
 </html>
