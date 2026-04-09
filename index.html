@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>মাদ্রাসা বাজার - কাঙ্ক্ষিত মাদ্রাসা খুঁজে নিন</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap');
+        body { font-family: 'Hind Siliguri', sans-serif; padding-bottom: 70px; }
+        .hidden-view { display: none; }
+        .active-view { display: block; }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <!-- Header Section -->
+    <div id="homeHeader" class="bg-[#1b5e20] p-4 text-white">
+        <div class="max-w-md mx-auto">
+            <div class="bg-white flex items-center px-4 py-2 rounded-full mb-3 text-gray-700">
+                <i class="fa fa-search mr-2"></i>
+                <input type="text" placeholder="মাদ্রাসা খুঁজুন..." class="w-full outline-none text-sm">
+            </div>
+            <div class="flex justify-between text-xs">
+                <span><i class="fa fa-map-marker-alt"></i> সারা বাংলাদেশ</span>
+                <span class="text-yellow-400 font-bold">স্থান পরিবর্তন করুন</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- View 1: Home View -->
+    <div id="homeView" class="active-view max-w-md mx-auto">
+        <!-- Categories -->
+        <div class="grid grid-cols-3 bg-white border-b text-center py-4">
+            <div class="category py-2"><i class="fa fa-book text-green-600 text-2xl"></i><p class="text-[10px] mt-1">নূরানী</p></div>
+            <div class="category py-2"><i class="fa fa-quran text-blue-600 text-2xl"></i><p class="text-[10px] mt-1">হিফজ</p></div>
+            <div class="category py-2"><i class="fa fa-graduation-cap text-red-600 text-2xl"></i><p class="text-[10px] mt-1">কওমি</p></div>
+        </div>
+
+        <div class="p-4">
+            <h2 class="font-bold mb-4">সাম্প্রতিক ভর্তি বিজ্ঞপ্তি</h2>
+            <div id="adContainer" class="space-y-4">
+                <p class="text-center text-gray-500 py-10">বিজ্ঞাপন লোড হচ্ছে...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- View 2: Login View -->
+    <div id="loginView" class="hidden-view p-8 max-w-md mx-auto text-center mt-20">
+        <h2 class="text-2xl font-bold mb-4">লগইন করুন</h2>
+        <p class="text-gray-500 mb-8">বিজ্ঞাপন পোস্ট করতে লগইন প্রয়োজন</p>
+        <button id="googleBtn" class="w-full border p-4 rounded-xl flex items-center justify-center gap-3 shadow-sm hover:bg-gray-50 transition">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" class="w-6">
+            Google দিয়ে লগইন
+        </button>
+    </div>
+
+    <!-- View 3: Ad Post View -->
+    <div id="postView" class="hidden-view p-6 max-w-md mx-auto">
+        <h2 class="text-xl font-bold mb-6 border-b pb-2 text-green-800">নতুন বিজ্ঞাপন ফরম</h2>
+        <form id="adForm" class="space-y-4">
+            <input type="text" id="mName" placeholder="মাদ্রাসার নাম" class="w-full border p-3 rounded-lg" required>
+            <input type="text" id="mLocation" placeholder="ঠিকানা" class="w-full border p-3 rounded-lg" required>
+            <input type="tel" id="mPhone" placeholder="মোবাইল নম্বর" class="w-full border p-3 rounded-lg" required>
+            <textarea id="mDetails" placeholder="ভর্তির বিবরণ..." class="w-full border p-3 rounded-lg h-32" required></textarea>
+            <div class="bg-gray-100 p-4 border-2 border-dashed rounded-lg text-center">
+                <input type="file" id="mImage" accept="image/*" class="text-xs" required>
+            </div>
+            <button type="submit" id="submitBtn" class="w-full bg-green-700 text-white py-4 rounded-xl font-bold shadow-lg">পাবলিশ করুন</button>
+        </form>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center py-2 px-4 shadow-xl z-[100]">
+        <div onclick="showView('homeView')" class="text-center cursor-pointer text-green-800">
+            <i class="fa fa-home text-xl"></i><p class="text-[10px]">হোম</p>
+        </div>
+        <div onclick="checkAuthAndPost()" class="text-center cursor-pointer">
+            <div class="bg-yellow-500 w-12 h-12 rounded-full flex items-center justify-center -mt-8 border-4 border-white shadow-lg">
+                <i class="fa fa-plus text-white text-xl"></i>
+            </div>
+            <p class="text-[10px] mt-1 font-bold">বিজ্ঞাপন</p>
+        </div>
+        <div onclick="showView('loginView')" class="text-center cursor-pointer text-gray-500">
+            <i class="fa fa-user text-xl"></i><p class="text-[10px]">প্রোফাইল</p>
+        </div>
+    </nav>
+
+    <!-- Firebase System -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // ১. আপনার কনফিগ
+        const firebaseConfig = {
+            apiKey: "AIzaSyDjwJwlJBVeBmQU0QWgxVkWcS-3CQ6PBc0",
+            authDomain: "madrass-14912.firebaseapp.com",
+            projectId: "madrass-14912",
+            storageBucket: "madrass-14912.firebasestorage.app",
+            messagingSenderId: "986132379865",
+            appId: "1:986132379865:web:2e4a811edf2aa508da26c8"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+        const IMGBB_API_KEY = '7a5eacf017aadcfeb81ef6f990a570a6';
+
+        let userAccount = null;
+
+        // ভিউ কন্ট্রোল
+        window.showView = (id) => {
+            document.querySelectorAll('.active-view').forEach(el => {
+                el.classList.add('hidden-view');
+                el.classList.remove('active-view');
+            });
+            document.getElementById(id).classList.add('active-view');
+            document.getElementById(id).classList.remove('hidden-view');
+            window.scrollTo(0, 0);
+        };
+
+        // অথেনটিকেশন চেক
+        onAuthStateChanged(auth, (user) => {
+            userAccount = user;
+            if(user) console.log("Logged in as: ", user.displayName);
+        });
+
+        window.checkAuthAndPost = () => {
+            if (userAccount) showView('postView');
+            else showView('loginView');
+        };
+
+        // গুগল লগইন
+        document.getElementById('googleBtn').onclick = () => {
+            signInWithPopup(auth, provider).then(() => {
+                showView('postView');
+            }).catch(err => {
+                alert("লগইন এরর: " + err.message);
+                console.error(err);
+            });
+        };
+
+        // বিজ্ঞাপন লোড করা
+        const q = query(collection(db, "ads"), orderBy("createdAt", "desc"));
+        onSnapshot(q, (snapshot) => {
+            const container = document.getElementById('adContainer');
+            container.innerHTML = '';
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                container.innerHTML += `
+                    <div class="flex gap-4 p-3 bg-white rounded-xl shadow-sm border border-gray-100">
+                        <img src="${data.imageUrl}" class="w-24 h-24 object-cover rounded-lg shadow">
+                        <div class="flex-grow">
+                            <h3 class="font-bold text-green-900 leading-tight">${data.name}</h3>
+                            <p class="text-[11px] text-gray-500 mt-1"><i class="fa fa-map-marker-alt"></i> ${data.location}</p>
+                            <p class="text-xs text-gray-700 mt-2 line-clamp-2">${data.details}</p>
+                            <div class="mt-2 text-right">
+                                <a href="tel:${data.phone}" class="text-green-700 font-bold text-sm underline">কল করুন</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+
+        // বিজ্ঞাপন সাবমিট
+        document.getElementById('adForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const file = document.getElementById('mImage').files[0];
+
+            btn.disabled = true;
+            btn.innerHTML = "আপলোড হচ্ছে...";
+
+            try {
+                // ছবি আপলোড ImgBB-তে
+                const formData = new FormData();
+                formData.append('image', file);
+                const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
+                const imgData = await res.json();
+                
+                // তথ্য সেভ Firestore-এ
+                await addDoc(collection(db, "ads"), {
+                    name: document.getElementById('mName').value,
+                    location: document.getElementById('mLocation').value,
+                    phone: document.getElementById('mPhone').value,
+                    details: document.getElementById('mDetails').value,
+                    imageUrl: imgData.data.url,
+                    uid: userAccount.uid,
+                    createdAt: new Date()
+                });
+
+                alert("বিজ্ঞাপনটি সফলভাবে পাবলিশ হয়েছে!");
+                document.getElementById('adForm').reset();
+                showView('homeView');
+            } catch (err) {
+                alert("সমস্যা হয়েছে! অনুগ্রহ করে ফায়ারবেস রুলস চেক করুন।");
+                console.error(err);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = "পাবলিশ করুন";
+            }
+        };
+    </script>
+</body>
+</html>
